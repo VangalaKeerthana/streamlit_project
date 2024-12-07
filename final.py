@@ -39,3 +39,12 @@ try:
         st.warning("No data found in the collection.")
 except Exception as e:
     st.error(f"Error fetching data from Firestore: {e}")
+import logging
+
+# Initialize logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Before Firebase initialization
+logging.debug("Initializing Firebase with secrets.")
+logging.debug(f"Secrets: {firebase_secrets}")
+
