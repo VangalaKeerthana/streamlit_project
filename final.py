@@ -1,18 +1,22 @@
+import logging
 import streamlit as st
 from firebase_admin import credentials, firestore, initialize_app
-import logging
 
-# Initialize logging
+# Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
 # Access Firebase secrets from Streamlit Cloud secrets
-firebase_secrets = st.secrets["firebase"]
-
-# Log initialization step (excluding sensitive data)
-logging.debug("Initializing Firebase Admin with provided secrets.")
-
 try:
-    # Initialize Firebase Admin
+    firebase_secrets = st.secrets["firebase"]
+    logging.debug("Firebase secrets retrieved successfully.")
+except Exception as e:
+    logging.error(f"Failed to retrieve Firebase secrets: {e}")
+    st.error("Error retrieving Firebase secrets. Check your Streamlit secrets configuration.")
+    st.stop()
+
+# Initialize Firebase Admin
+try:
+    logging.debug("Initializing Firebase Admin SDK.")
     cred = credentials.Certificate({
         "type": firebase_secrets["type"],
         "project_id": firebase_secrets["project_id"],
@@ -26,10 +30,10 @@ try:
         "client_x509_cert_url": firebase_secrets["client_x509_cert_url"]
     })
     initialize_app(cred)
+    logging.debug("Firebase initialized successfully.")
     db = firestore.client()
-    logging.debug("Firebase Admin initialized successfully.")
 except Exception as e:
-    logging.error(f"Error initializing Firebase: {e}")
+    logging.error(f"Error during Firebase initialization: {e}")
     st.error("Failed to initialize Firebase. Please check your configuration.")
     st.stop()
 
@@ -42,16 +46,13 @@ collection_name = "dic_project"
 # Fetch and display Firestore data
 st.subheader("View Data from Firestore")
 try:
-    logging.debug(f"Fetching data from Firestore collection: {collection_name}")
     docs = db.collection(collection_name).stream()  # Fetch all documents
     data_list = [doc.to_dict() for doc in docs]  # Convert documents to a list of dictionaries
 
     if data_list:
-        logging.debug(f"Fetched {len(data_list)} documents from Firestore.")
         st.write("Data in Firestore:")
         st.write(data_list)  # Display all data as a list of dictionaries
     else:
-        logging.warning("No data found in the Firestore collection.")
         st.warning("No data found in the collection.")
 except Exception as e:
     logging.error(f"Error fetching data from Firestore: {e}")
